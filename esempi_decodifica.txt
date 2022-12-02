@@ -1,0 +1,49 @@
+function Decoder(bytes, port) {
+  
+  
+  var temp_1 = bytes[0];
+  var temp_2 = bytes[1];
+  
+  var hum_1 = bytes[2];
+  var hum_2 = bytes[3];
+  
+  var temp = (temp_2 << 8) | temp_1;
+  var hum = (hum_2 << 8) | hum_1;
+  
+  const int16 = new Int16Array(2);
+  int16[0] = temp;
+  int16[1] = hum;
+  
+  
+  
+  return {
+    temperature: int16[0] /10,
+    humidity: int16[1]/10
+  };
+}
+#################################################
+function Decoder(bytes, port) {
+  
+  
+  var light_1 = bytes[0];
+  var light_2 = bytes[1];
+  var decoded = {};
+  
+
+  var light1 = (light_2 << 8)|light_1;
+  decoded.pressure  = ((bytes[3] << 8) + bytes[2]);
+  decoded.pressure2 = ((bytes[4] << 8) + bytes[5]);
+  decoded.pressure3 = ((decoded.pressure2<<8) + (decoded.pressure))/10;
+  
+  
+  const int16 = new Int16Array(4);
+  int16[0] = light1;
+  
+  const int32 = new Int32Array(4);
+  int32[0] = decoded.pressure3;
+      
+  return {
+	light: int16[0]*10,
+	pressure: int32[0]    
+  };
+}
