@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2019, Pycom Limited.
+# Copyright (C) 2024, Telematics Lab - Politecnico di Bari.
+#
+# This software is licensed under the GNU GPL version 3 or any
+# later version, with permitted additional terms. For more information
+# see the Pycom Licence v1.0 document supplied with this file, or
+# available at https://www.pycom.io/opensource/licensing
+#
+
+""" OTAA Node example compatible with the LoPy Nano Gateway """
+
 from network import LoRa
 import socket
 import binascii
@@ -34,10 +47,11 @@ dev_eui = binascii.unhexlify('xxxx')
 app_eui = binascii.unhexlify('0000000000000000')
 app_key = binascii.unhexlify('xxxx')
 
-# set the 3 default channels to the same frequency (must be before sending the OTAA join request)
-lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
-lora.add_channel(1, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
-lora.add_channel(2, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+if config.SINGLE_CHANNEL:
+    # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
+    lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+    lora.add_channel(1, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+    lora.add_channel(2, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
 
 # join a network using OTAA
 lora.join(activation=LoRa.OTAA, auth=(dev_eui, app_eui, app_key), timeout=0, dr=config.LORA_NODE_DR)
@@ -47,9 +61,14 @@ while not lora.has_joined():
     time.sleep(2.5)
     print('Not joined yet...')
 
-# remove all the non-default channels
-for i in range(3, 16):
-    lora.remove_channel(i)
+if config.SINGLE_CHANNEL:
+    # remove all the non-default channels
+    for i in range(3, 16):
+        lora.remove_channel(i)
+else:
+    # remove all the non-default channels
+    for i in range(8, 16):
+        lora.remove_channel(i)
 
 # create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
