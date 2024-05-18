@@ -8,7 +8,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" LoPy LoRaWAN Nano Gateway. Can be used for both EU868 and US915. """
+""" Library for LoPy/FiPy LoRaWAN Nano Gateway """
 
 import errno
 import machine

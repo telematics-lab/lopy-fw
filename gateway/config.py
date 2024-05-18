@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright (c) 2019, Pycom Limited.
+# Copyright (C) 2024, Telematics Lab - Politecnico di Bari.
 #
 # This software is licensed under the GNU GPL version 3 or any
 # later version, with permitted additional terms. For more information
@@ -8,32 +9,26 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" LoPy LoRaWAN Nano Gateway configuration options """
+""" LoPy/FiPy LoRaWAN Nano Gateway configuration options """
 
 import machine
 import ubinascii
 
+# A Gateway ID is created using the first 3 bytes of MAC address + 'FFFF' + last 3 bytes of MAC address
 WIFI_MAC = ubinascii.hexlify(machine.unique_id()).upper()
-# Set  the Gateway ID to be the first 3 bytes of MAC address + 'FFFE' + last 3 bytes of MAC address
 GATEWAY_ID = WIFI_MAC[:6] + "FFFF" + WIFI_MAC[6:12]
 print("GATEWAY_EUI", GATEWAY_ID)
+
 SERVER = 'eu1.cloud.thethings.network'
 PORT = 1700
 
 NTP = "pool.ntp.org"
 NTP_PERIOD_S = 3600
 
-WIFI_SSID = 'xxxx'
-WIFI_PASS = "xxxx"
+# Put here your WiFi settings to forward LoRa packets to TTN
+WIFI_SSID = 'xxxx' 
+WIFI_PASS = 'xxxx'
 
-
-# for EU868
-#LORA_FREQUENCY = 868500000
-LORA_FREQUENCY = 868100000 #originale
+# Phisical layer configurations for a single channel LoRaWAN gateway
+LORA_FREQUENCY = 868100000
 LORA_GW_DR = "SF7BW125" # DR_5
-LORA_NODE_DR = 5
-
-# for US915
-# LORA_FREQUENCY = 903900000
-# LORA_GW_DR = "SF10BW125" # DR_0
-# LORA_NODE_DR = 0
