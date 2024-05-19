@@ -9,32 +9,21 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" LoPy LoRaWAN Nano Gateway configuration options """
+""" LoPy/FiPy LoRaWAN node configuration options """
 
 import machine
 import ubinascii
 from network import LoRa
 import ubinascii
 
-
-#lora = LoRa()
-#print("DevEUI: %s" % (ubinascii.hexlify(lora.mac()).decode('ascii')))
-
+# A Device ID is created using the first 3 bytes of MAC address + 'FFFE' + last 3 bytes of MAC address
 WIFI_MAC = ubinascii.hexlify(machine.unique_id()).upper()
-# Set  the Gateway ID to be the first 3 bytes of MAC address + 'FFFE' + last 3 bytes of MAC address
-DEV_EUI = WIFI_MAC[:6] + "FFFF" + WIFI_MAC[6:12]
+DEV_EUI = WIFI_MAC[:6] + "FFFE" + WIFI_MAC[6:12]
 print("DEV_EUI", DEV_EUI)
 
-SERVER = 'eu1.cloud.thethings.network'
-PORT = 1700
+# Set True when using a single channel Gateway, False otherwise  
+SINGLE_CHANNEL = True
 
-NTP = "pool.ntp.org"
-NTP_PERIOD_S = 3600
-
-WIFI_SSID = 'xxx'
-WIFI_PASS = 'xxx'
-
-# for EU868
+# Phisical layer configurations for a single channel LoRaWAN node
 LORA_FREQUENCY = 868100000
-LORA_GW_DR = "SF7BW125" # DR_5
 LORA_NODE_DR = 5

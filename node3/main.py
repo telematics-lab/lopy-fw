@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2020, Pycom Limited.
+# Copyright (c) 2019, Pycom Limited.
 # Copyright (C) 2024, Telematics Lab - Politecnico di Bari.
 #
 # This software is licensed under the GNU GPL version 3 or any
@@ -9,26 +9,24 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-import machine
-import math
-import network
+""" OTAA Node example sending GNSS coordinates informations """
+
 from network import LoRa
-import os
-import time
-import utime
-import gc
-from machine import RTC
-from machine import SD
-from L76GNSS import L76GNSS
-from pycoproc_1 import Pycoproc
 import socket
 import binascii
 import struct
+import time
 import config
-import pycom
 
-time.sleep(10)
-gc.enable()
+import pycom
+from pycoproc_1 import Pycoproc
+import machine
+
+from L76GNSS import L76GNSS
+
+pycom.heartbeat(False)
+
+py = Pycoproc(Pycoproc.PYTRACK)
 
 # initialize LoRa in LORAWAN mode.
 # Please pick the region that matches where you are using the device:
@@ -77,31 +75,27 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
-
-
-
-# setup rtc
-rtc = machine.RTC()
-rtc.ntp_sync("pool.ntp.org")
-utime.sleep_ms(750)
-print('\nRTC Set from NTP to UTC:', rtc.now())
-utime.timezone(7200)
-print('Adjusted from UTC to EST timezone', utime.localtime(), '\n')
-
-py = Pycoproc(Pycoproc.PYTRACK)
 l76 = L76GNSS(py, timeout=30)
 
 while (True):
+    pycom.heartbeat(False)
+    pycom.rgbled(0x0000ff)
     coord = l76.coordinates()
 
     if coord[0] is not None:
-        print("GPS informations: {} - {} - {}\n".format(coord, rtc.now(), gc.mem_free()))
+        print("GNSS informations: {}\n".format(coord))
+        
         dataLa = bytearray(struct.pack("i", int(coord[0]*100000)))
         dataLo = bytearray(struct.pack("i", int(coord[1]*100000)))
         data = dataLa+dataLo
-        s.send(data)
-        print("GPS informations: {} - {} - {}\n".format(coord, rtc.now(), gc.mem_free()))
+        try:
+            s.send(data)
+            print("Packet sent!\n")
+        except:
+            print("Packet not sent!\n")
+            time.sleep(10)
     else:
         print("Waiting GPS to lock...\n")
 
+    pycom.heartbeat(True)
     time.sleep(5)
