@@ -9,7 +9,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" OTAA Node example compatible with the LoPy Nano Gateway """
+""" OTAA Node example sending temperature and humidity informations """
 
 from network import LoRa
 import socket
@@ -21,7 +21,6 @@ import config
 import pycom
 from pycoproc_2 import Pycoproc
 import machine
-
 
 from LIS2HH12 import LIS2HH12
 from SI7006A20 import SI7006A20
@@ -81,24 +80,30 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
+mp = MPL3115A2(py,mode=ALTITUDE) 
+si = SI7006A20(py)
 
-for i in range (200):
+while (True):
     pycom.heartbeat(False)
     pycom.rgbled(0x0000ff)
-    mp = MPL3115A2(py,mode=ALTITUDE) # Returns height in meters. Mode may also be set to PRESSURE, returning a value in Pascal
-    # print(mp.temperature())
-    print("MPL3115A2 temperature: " + str(mp.temperature()))
-    temp = mp.temperature()*10
-    temp= round(temp)
-    si = SI7006A20(py)
-    print("Relative Humidity: " + str(si.humidity()) + " %RH")
-    humidity = si.humidity()*10
-    humidity = round(humidity)
-    # print(humidity)
+    
+    temp = mp.temperature()
+    print("Temperature: " + str(temp) + "°")
+    temp= round(temp*10)
+    
+    humidity = si.humidity()
+    print("Humidity: " + str(humidity) + " %RH")
+    humidity = round(humidity*10)
+
     data1 = bytearray(struct.pack("H", temp))
     data2 = bytearray(struct.pack("H", humidity))
     data_joined = data1 + data2
-    print(data_joined)
-    s.send(data_joined)
+    try:
+        s.send(data_joined)
+        print("Packet sent!\n")
+    except:
+        print("Packet not sent!\n")
+        time.sleep(10)
+
     pycom.heartbeat(True)
     time.sleep(6)
