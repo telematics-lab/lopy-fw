@@ -9,8 +9,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" OTAA Node example compatible with the LoPy Nano Gateway """
-
+""" OTAA Node example sending light and pressure informations """
 
 from network import LoRa
 import socket
@@ -18,10 +17,10 @@ import binascii
 import struct
 import time
 import config
+
 import pycom
 from pycoproc_2 import Pycoproc
 import machine
-
 
 from LIS2HH12 import LIS2HH12
 from SI7006A20 import SI7006A20
@@ -81,28 +80,30 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
+lt = LTR329ALS01(py)
+pr= MPL3115A2(py, mode=PRESSURE)
 
-for i in range (200):
+while (True):
     pycom.heartbeat(False)
-    pycom.rgbled(0xffff00)
-    lt = LTR329ALS01(py)
-    print("LTR329ALS01 light: " + str(lt.light()))
+    pycom.rgbled(0x0000ff)
+    
+    print("Light: " + str(lt.light()))
     li = float('.'.join(str(elem) for elem in lt.light()))
     li = li/10
     li= round(li)
-    print(li)
-    pr= MPL3115A2(py, mode=PRESSURE)
-    print("la pressione e':" + str(pr.pressure()))
-    pressure=pr.pressure()*10
-    pressure=round(pressure)
-    print(pressure)
-    datal = bytearray(struct.pack("H",li))
-    print(datal)
-    datam = bytearray(struct.pack("L", pressure))
-    print(datam)
-    data_joined= datal+datam
-    print("luce e pressione:"+str(data_joined))
-    s.send(data_joined)
-    pycom.heartbeat(True)
 
+    pressure=pr.pressure()
+    print("Pressure: " + str(pressure))
+    pressure=round(pressure*10)
+
+    datal = bytearray(struct.pack("H",li))
+    datam = bytearray(struct.pack("L", pressure))
+    data_joined= datal+datam
+    try:
+        s.send(data_joined)
+        print("Packet sent!\n")
+    except:
+        print("Packet not sent!\n")
+        time.sleep(10)
+    pycom.heartbeat(True)
     time.sleep(6)
