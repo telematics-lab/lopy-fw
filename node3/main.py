@@ -9,7 +9,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" OTAA Node example sending temperature and humidity informations """
+""" OTAA Node example sending GNSS coordinates informations """
 
 from network import LoRa
 import socket
@@ -19,19 +19,14 @@ import time
 import config
 
 import pycom
-from pycoproc_2 import Pycoproc
+from pycoproc_1 import Pycoproc
 import machine
 
-from LIS2HH12 import LIS2HH12
-from SI7006A20 import SI7006A20
-from LTR329ALS01 import LTR329ALS01
-from MPL3115A2 import MPL3115A2,ALTITUDE,PRESSURE
+from L76GNSS import L76GNSS
 
 pycom.heartbeat(False)
 
-py = Pycoproc()
-if py.read_product_id() != Pycoproc.USB_PID_PYSENSE:
-    raise Exception('Not a Pysense')
+py = Pycoproc(Pycoproc.PYTRACK)
 
 # initialize LoRa in LORAWAN mode.
 # Please pick the region that matches where you are using the device:
@@ -68,7 +63,7 @@ else:
     # remove all the non-default channels
     for i in range(8, 16):
         lora.remove_channel(i)
-
+        
 # create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
@@ -80,30 +75,27 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
-mp = MPL3115A2(py,mode=ALTITUDE) 
-si = SI7006A20(py)
+l76 = L76GNSS(py, timeout=30)
 
 while (True):
     pycom.heartbeat(False)
     pycom.rgbled(0x0000ff)
-    
-    temp = mp.temperature()
-    print("Temperature: " + str(temp) + "°")
-    temp= round(temp*10)
-    
-    humidity = si.humidity()
-    print("Humidity: " + str(humidity) + " %RH")
-    humidity = round(humidity*10)
+    coord = l76.coordinates()
 
-    data1 = bytearray(struct.pack("H", temp))
-    data2 = bytearray(struct.pack("H", humidity))
-    data_joined = data1 + data2
-    try:
-        s.send(data_joined)
-        print("Packet sent!\n")
-    except:
-        print("Packet not sent!\n")
-        time.sleep(10)
+    if coord[0] is not None:
+        print("GNSS informations: {}\n".format(coord))
+        
+        dataLa = bytearray(struct.pack("i", int(coord[0]*100000)))
+        dataLo = bytearray(struct.pack("i", int(coord[1]*100000)))
+        data = dataLa+dataLo
+        try:
+            s.send(data)
+            print("Packet sent!\n")
+        except:
+            print("Packet not sent!\n")
+            time.sleep(10)
+    else:
+        print("Waiting GPS to lock...\n")
 
     pycom.heartbeat(True)
-    time.sleep(6)
+    time.sleep(5)

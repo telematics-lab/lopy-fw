@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright (c) 2019, Pycom Limited.
+# Copyright (C) 2024, Telematics Lab - Politecnico di Bari.
 #
 # This software is licensed under the GNU GPL version 3 or any
 # later version, with permitted additional terms. For more information
@@ -8,8 +9,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" OTAA Node example compatible with the LoPy Nano Gateway """
-
+""" OTAA Node example sending light and pressure informations """
 
 from network import LoRa
 import socket
@@ -17,10 +17,10 @@ import binascii
 import struct
 import time
 import config
+
 import pycom
 from pycoproc_2 import Pycoproc
 import machine
-
 
 from LIS2HH12 import LIS2HH12
 from SI7006A20 import SI7006A20
@@ -46,10 +46,11 @@ dev_eui = binascii.unhexlify('xxxx')
 app_eui = binascii.unhexlify('0000000000000000')
 app_key = binascii.unhexlify('xxxx')
 
-# set the 3 default channels to the same frequency (must be before sending the OTAA join request)
-lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
-lora.add_channel(1, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
-lora.add_channel(2, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+if config.SINGLE_CHANNEL:
+    # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
+    lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+    lora.add_channel(1, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+    lora.add_channel(2, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
 
 # join a network using OTAA
 lora.join(activation=LoRa.OTAA, auth=(dev_eui, app_eui, app_key), timeout=0, dr=config.LORA_NODE_DR)
@@ -59,9 +60,14 @@ while not lora.has_joined():
     time.sleep(2.5)
     print('Not joined yet...')
 
-# remove all the non-default channels
-for i in range(3, 16):
-    lora.remove_channel(i)
+if config.SINGLE_CHANNEL:
+    # remove all the non-default channels
+    for i in range(3, 16):
+        lora.remove_channel(i)
+else:
+    # remove all the non-default channels
+    for i in range(8, 16):
+        lora.remove_channel(i)
 
 # create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
@@ -74,36 +80,30 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
+lt = LTR329ALS01(py)
+pr= MPL3115A2(py, mode=PRESSURE)
 
-for i in range (200):
+while (True):
     pycom.heartbeat(False)
-    pycom.rgbled(0xffff00)
-    lt = LTR329ALS01(py) # Returns height in meters. Mode may also be set to PRESSURE, returning a value in Pascal
-    #print(lt.light())
-    print("LTR329ALS01 light: " + str(lt.light()))
+    pycom.rgbled(0x0000ff)
+    
+    print("Light: " + str(lt.light()))
     li = float('.'.join(str(elem) for elem in lt.light()))
-    #print(dir(lt.light()))
-
     li = li/10
     li= round(li)
-    print(li)
-    pr= MPL3115A2(py, mode=PRESSURE)
-    print("la pressione e':" + str(pr.pressure()))
-    pressure=pr.pressure()*10
-    pressure=round(pressure)
-    print(pressure)
-    #si = SI7006A20(py)
-    #print("Relative Humidity: " + str(si.humidity()) + " %RH")
-    #= si.humidity()*10
-    #humidity = round(humidity)
-    # print(humidity)
-    datal = bytearray(struct.pack("H",li))
-    print(datal)
-    datam = bytearray(struct.pack("L", pressure))
-    print(datam)
-    data_joined= datal+datam
-    print("luce e pressione:"+str(data_joined))
-    s.send(data_joined)
-    pycom.heartbeat(True)
 
+    pressure=pr.pressure()
+    print("Pressure: " + str(pressure))
+    pressure=round(pressure*10)
+
+    datal = bytearray(struct.pack("H",li))
+    datam = bytearray(struct.pack("L", pressure))
+    data_joined= datal+datam
+    try:
+        s.send(data_joined)
+        print("Packet sent!\n")
+    except:
+        print("Packet not sent!\n")
+        time.sleep(10)
+    pycom.heartbeat(True)
     time.sleep(6)

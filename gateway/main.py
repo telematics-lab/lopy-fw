@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright (c) 2019, Pycom Limited.
+# Copyright (C) 2024, Telematics Lab - Politecnico di Bari.
 #
 # This software is licensed under the GNU GPL version 3 or any
 # later version, with permitted additional terms. For more information
@@ -8,7 +9,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-""" LoPy LoRaWAN Nano Gateway example usage """
+""" LoPy/FiPy LoRaWAN Nano Gateway example """
 
 import config
 from nanogateway import NanoGateway
