@@ -32,6 +32,12 @@ This folder contains example code for a LoRa node that sends GPS coordinates. Th
 - `main.py`: Script to read GPS coordinates from the PyTrack shield and send it via LoRa.
 - `config.py`: Configuration file for node parameters.
 
+### 5. node sniffer
+This folder contains example code for a LoRa sniffer, designed to intercept and analyze LoRa packets transmitted within the network. The code utilizes a PyTrack shield connected to a LoPy or FiPy board for data reception and analysis.
+**Contents:**
+- `main.py`: Script to read packets from the PyTrack shield.
+- `config.py`: Configuration file for node parameters.
+
 ### 5. decoder
 This folder includes JavaScript examples of decoding functions to be used in The Things Network (TTN) for decoding the payload received from the LoRa nodes.
 
